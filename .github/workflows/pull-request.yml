@@ -37,6 +37,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    id: lint
     needs: cache
     steps:
       - uses: actions/checkout@v2.3.4
