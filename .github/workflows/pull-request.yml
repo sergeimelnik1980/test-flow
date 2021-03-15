@@ -86,9 +86,16 @@ jobs:
         if: steps.cache-build.outputs.cache-hit != 'true'
       - run: ./test_cypress.sh
   
+  create-dump:
+    runs-on: ubuntu-latest
+    needs: cache
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - run: "skript"
+  
   db-migration:
     runs-on: ubuntu-latest
-    needs: [ cypress-e2e, test ]
+    needs: [ cypress-e2e, create-dump, test ]
     steps:
       - uses: actions/checkout@v2.3.4
       - uses: actions/cache@v2.1.4
@@ -143,3 +150,9 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           PROJECT_ID: "default"
            
+  update-cluster:
+    runs-on: ubuntu-latest
+    needs: db-migration
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - run: "script"   
