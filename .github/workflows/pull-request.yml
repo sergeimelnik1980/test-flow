@@ -188,11 +188,11 @@ jobs:
             gcloud --quiet auth configure-docker
         - uses: google-github-actions/get-gke-credentials@v0.2.1
           with:
-            cluster_name: ${{ env.GKE_CLUSTER }}
-            location: ${{ env.GKE_ZONE }}
+            cluster_name: $GKE_CLUSTER
+            location: $GKE_ZONE
             credentials: ${{ secrets.GCP_SERVICE_KEY }}
         - name: Get the version
-          run: echo ::set-output name=GIT_TAG_NAME::${GITHUB_REF/refs\/tags\//}
+          run: echo ::set-output name=GIT_TAG_NAME::${GITHUB_SHA}
         - name: update
           run: |-
             kubectl set image deployment/$DEPLOYMENT_NAME DEPLOYMENT_NAME_CON=gcr.io/$PROJECT_ID/$IMAGE:${{ steps.get_tag_name.outputs.GIT_TAG_NAME}} --namespace=$NAME_SPASE
