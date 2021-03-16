@@ -57,7 +57,17 @@ jobs:
     needs: cypress-e2e
     steps:
       - uses: actions/checkout@v2.3.4 
-      - run: "script"
+      - name: Get the version
+        id: get_tag_name
+        run: echo ::set-output name=GIT_TAG_NAME::${GITHUB_REF/refs\/tags\//}
+      - uses: RafikFarhad/push-to-gcr-github-action@v3.0.2
+        with:
+          gcloud_service_key: ${{ secrets.GCLOUD_SERVICE_KEY }}
+          registry: gcr.io
+          project_id: serious-flight-302114
+          image_name: test-flow
+          image_tag: ${{ steps.get_tag_name.outputs.GIT_TAG_NAME}}
+          dockerfile: ./Dockerfile  
         
   test:
     runs-on: ubuntu-latest
@@ -74,7 +84,7 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: npm run test
+      - run: npm run lint
 
   cypress-e2e:
     runs-on: ubuntu-latest
@@ -91,14 +101,14 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: ./test_cypress.sh
+      - run: npm run lint
   
   create-dump:
     runs-on: ubuntu-latest
     needs: cache
     steps:
       - uses: actions/checkout@v2.3.4
-      - run: "skript"
+        run: echo "Dump created"
   
   db-migration:
     runs-on: ubuntu-latest
@@ -115,7 +125,7 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: npm run db:migrution:run 
+      - run: npm run lint 
  
   firebase-build:
     runs-on: ubuntu-latest
@@ -159,7 +169,7 @@ jobs:
            
   update-cluster:
     runs-on: ubuntu-latest
-    needs: db-migration
+    needs: [ db-migration, docker-build ]
     steps:
       - uses: actions/checkout@v2.3.4
       - run: "script"   
