@@ -50,7 +50,7 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'  
-      - run: npm lint
+      - run: npm run lint
 
   docker-build:
     runs-on: ubuntu-latest
@@ -179,7 +179,7 @@ jobs:
             DEPLOYMENT_NAME_CON: nginx-1
         - uses: google-github-actions/setup-gcloud@v0.2.0
           with:
-            service_account_key: ${{ secrets.GCLOUD_SERVICE_KEY }}
+            service_account_key: ${{ secrets.GCP_SERVICE_KEY }}
             project_id: ${{ secrets.GKE_PROJECT }}
         - run: |-
             gcloud --quiet auth configure-docker
@@ -187,7 +187,7 @@ jobs:
           with:
             cluster_name: ${{ env.GKE_CLUSTER }}
             location: ${{ env.GKE_ZONE }}
-            credentials: ${{ secrets.GCLOUD_SERVICE_KEY }}
+            credentials: ${{ secrets.GCP_SERVICE_KEY }}
         - name: update
           run: |-
             kubectl set image deployment/$DEPLOYMENT_NAME DEPLOYMENT_NAME_CON=gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA --namespace=$NAME_SPASE
