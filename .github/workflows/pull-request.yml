@@ -143,12 +143,14 @@ jobs:
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
       - run: npm run build 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
         with:
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}'
-          channelId: live
-          projectId: test-flow
-           
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PROJECT_ID: "default"           
+  
   update-cluster:
       runs-on: ubuntu-latest
       needs: [ db-migration, docker-build ]
