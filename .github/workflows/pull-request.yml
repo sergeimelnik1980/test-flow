@@ -108,7 +108,7 @@ jobs:
     needs: cache
     steps:
       - uses: actions/checkout@v2.3.4
-        run: echo "Dump created"
+      - run: echo "Dump created"
   
   db-migration:
     runs-on: ubuntu-latest
