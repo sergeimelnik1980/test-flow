@@ -32,7 +32,7 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: npm run build
+      - run: npm run server:build
         
 
   lint:
@@ -67,7 +67,7 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: npm run lint
+      - run: npm run test
   
   cypress-e2e-scully:
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: npm run lint
+      - run: ./deploy/script_test.sh
  
   cypress-e2e-main:
     runs-on: ubuntu-latest
@@ -125,5 +125,4 @@ jobs:
           args: deploy --only hosting
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          PROJECT_ID: "default"           
-  
+          PROJECT_ID: "GKE_PROJECT"
