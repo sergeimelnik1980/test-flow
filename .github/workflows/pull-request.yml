@@ -32,7 +32,7 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: npm run build
+      - run: npm run dev:build
         
 
   lint:
@@ -67,7 +67,7 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: npm run lint
+      - run: npm run test
   
   cypress-e2e-scully:
     runs-on: ubuntu-latest
@@ -101,7 +101,12 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: npm run lint
+      - name: Decrypt large secret
+        run: |
+          gpg --quiet --batch --yes --decrypt --passphrase="$LARGE_SECRET_PASSPHRASE" --output /home/runner/work/liberty-flights/liberty-flights/.env .env.gpg
+        env:
+          LARGE_SECRET_PASSPHRASE: ${{ secrets.LARGE_SECRET_PASSPHRASE }}
+       - run: ./deploy/script_test.sh
   
   firebase-deploy-scully-to-preview:
      runs-on: ubuntu-latest
@@ -118,12 +123,20 @@ jobs:
           restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
         if: steps.cache-build.outputs.cache-hit != 'true'
-      - run: npm run build 
-      - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only hosting
+      - name: Decrypt large secret
+        run: |
+          gpg --quiet --batch --yes --decrypt --passphrase="$LARGE_SECRET_PASSPHRASE" --output /home/runner/work/liberty-flights/liberty-flights/.env .env.gpg
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          PROJECT_ID: "default"           
-  
+          LARGE_SECRET_PASSPHRASE: ${{ secrets.LARGE_SECRET_PASSPHRASE }}
+      - run: npm run ssr:staging
+      - run: ./deploy/run_server_scully.sh
+      - run: npm run scully:build:staging
+      - name: Deploy to Firebase
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}'
+          projectId: test-flow
+          expires: 2d
+        env:
+          FIREBASE_CLI_PREVIEWS: hostingchannels  
